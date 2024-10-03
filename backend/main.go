@@ -1,36 +1,35 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 )
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", ServeFile)
-	fmt.Println("server is listening on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	router := http.NewServeMux()
+	router.HandleFunc("/", ServeWebFile)
+	fmt.Println("server is running on port 8080")
+	http.ListenAndServe(":8080", router)
 }
 
-func ServeFile(w http.ResponseWriter, r *http.Request) {
+func ServeWebFile(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/")
+	path = strings.TrimSuffix(path, "/")
 
-	path := strings.TrimSuffix(r.URL.Path, "/")
-	path = strings.TrimPrefix(path, "/")
+	file := "../out/" + path + ".html"
 
-	// fmt.Println("./out/" + path + ".html")
-	// fmt.Println(filepath.Join(path) + " here")
+	_, err := os.Stat(file)
 
-	_, err := os.Stat("./out/" + path + ".html")
-
-	if err == nil {
-		http.ServeFile(w, r, "./out/"+path+".html")
+	if err != nil {
+		http.ServeFile(w, r, "../out/index.html")
 	} else {
-		http.ServeFile(w, r, "./out/index.html")
+		http.ServeFile(w, r, file)
 	}
+}
 
-	// fmt.Println(path)
-	//http.ServeFile(w, r, "./out/index.html")
+func Hello(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode("ok")
 }
