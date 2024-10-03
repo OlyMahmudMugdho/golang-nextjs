@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,7 +9,12 @@ import (
 
 func main() {
 	router := http.NewServeMux()
+
+	fs := http.FileServer(http.Dir("../out/_next/"))
+	router.Handle("/_next/", http.StripPrefix("/_next/", fs))
+
 	router.HandleFunc("/", ServeWebFile)
+
 	fmt.Println("server is running on port 8080")
 	http.ListenAndServe(":8080", router)
 }
@@ -24,12 +28,12 @@ func ServeWebFile(w http.ResponseWriter, r *http.Request) {
 	_, err := os.Stat(file)
 
 	if err != nil {
+		_, err := os.Stat("../out/static")
+		if err == nil {
+			fmt.Println("exists")
+		}
 		http.ServeFile(w, r, "../out/index.html")
 	} else {
 		http.ServeFile(w, r, file)
 	}
-}
-
-func Hello(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode("ok")
 }
